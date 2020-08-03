@@ -10,9 +10,9 @@
         Width="800"
         AllowsTransparency ="True"
         UseLayoutRounding="True"
-        WindowStyle="None">
-        <!--Background="Transparent"
-        ShowInTaskbar="False"-->
+        WindowStyle="None"
+        Background="Transparent">
+        <!--ShowInTaskbar="False"-->
 
     <Grid>
 
