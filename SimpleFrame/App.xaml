@@ -1,0 +1,13 @@
+﻿<Application x:Class="SimpleFrame.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:SimpleFrame"
+             xmlns:db="clr-namespace:SimpleFrame.DB">
+    <Application.Resources>
+        <DataTemplate DataType="{x:Type db:PhotoWindowData}">
+            <Border Margin="3">
+                <Image Source="{Binding Preview}"/>
+            </Border>
+        </DataTemplate>
+    </Application.Resources>
+</Application>
