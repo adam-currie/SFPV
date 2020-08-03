@@ -18,7 +18,7 @@ namespace SimpleFrame {
 
         private WinForms.NotifyIcon? notifyIcon;//won't be null after initialization
 
-        private ConcurrentClosableWindowCollection photoWindows = new ConcurrentClosableWindowCollection();
+        private ConcurrentClosableWindowCollection<PhotoWindow> photoWindows = new ConcurrentClosableWindowCollection<PhotoWindow>();
         private static Lazy<Icon> notifyIconIcon = new Lazy<Icon>(() =>
             Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location)
         );
@@ -105,7 +105,7 @@ namespace SimpleFrame {
 
             WinForms.ToolStripItem closeAll = new WinForms.ToolStripMenuItem("Close All");
             closeAll.Click += (s, e) => {
-                photoWindows.CloseAll();
+                photoWindows.CloseAll(beforeClosing: (w) => w.DataContext.Persistence = false);
             };
             strip.Items.Add(closeAll);
 
