@@ -30,7 +30,7 @@ namespace SimpleFrame {
 
                 bool closing = false;
                 lock (windowsForThisThread) {
-                    closing = closeAllForever == 0;
+                    closing = closeAllForever != 0;
                     /*
                      * Need to check closeAllForever inside lock because we don't want
                      * a thread setting it and closing our thread local windows
