@@ -84,8 +84,10 @@ namespace SimpleFrame {
         private void OpenPhotoWindowOnNewThread(PhotoWindowData? data = null) {
             Thread thread = new Thread(() => {
                 PhotoWindow window = (data != null) ? new PhotoWindow(new PhotoWindowViewModel(data)) : new PhotoWindow();
-                window.Closed += (s, e) => window.Dispatcher.InvokeShutdown();
+                window.Closed += (s, e) =>
+                    window.Dispatcher.InvokeShutdown();
                 photoWindows.Add(window);
+                window.Show();
                 Dispatcher.Run();
             });
 
