@@ -17,11 +17,13 @@ namespace SimpleFrame {
                     //todo: maybe need to check existence first?
                     using (var db = new WindowDbContext()) {
                         db.Remove(data);
+                        db.SaveChanges();
                     }
                 } else {
                     using (var db = new WindowDbContext()) {
                         //todo: maybe need to create first?
                         db.Update(data);
+                        db.SaveChanges();
                     }
                 }
                 OnPropertyChanged();
@@ -66,6 +68,7 @@ namespace SimpleFrame {
                 //todo: maybe need to check existence first?
                 using (var db = new WindowDbContext()) {
                     db.Remove(data);
+                    db.SaveChanges();
                 }
             } else {
                 using (var db = new WindowDbContext()) {
