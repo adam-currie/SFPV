@@ -1,4 +1,4 @@
-﻿using SimpleFrame.DB;
+using SimpleFrame.DB;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -16,6 +16,7 @@ namespace SimpleFrame {
         private const string LOCK_PATH = "lock";
         private const string ICON_PATH = "icon.ico";
 
+        private FileStream? lockFileStream;//need to reference this to keep it locked
         private WinForms.NotifyIcon? notifyIcon;//won't be null after initialization
 
         private ConcurrentPhotoWindowCollection photoWindows = new ConcurrentPhotoWindowCollection();
@@ -83,7 +84,9 @@ namespace SimpleFrame {
         /// <returns>The new Window.</returns>
         private void OpenPhotoWindowOnNewThread(PhotoWindowData? data = null) {
             Thread thread = new Thread(() => {
-                PhotoWindow window = (data != null) ? new PhotoWindow(new PhotoWindowViewModel(data)) : new PhotoWindow();
+                PhotoWindow window = (data != null) ? 
+                    new PhotoWindow(new PhotoWindowViewModel(data)) : 
+                    new PhotoWindow();
                 window.Closed += (s, e) =>
                     window.Dispatcher.InvokeShutdown();
                 photoWindows.Add(window);
@@ -129,24 +132,21 @@ namespace SimpleFrame {
 
         private bool TryLockAsMainProcess(out Process exclusiveProcess) {
 
-#pragma warning disable CS8625 // only here because compiler thinks the might not be initialized below...
+#pragma warning disable CS8625 // only here because dumb compiler thinks this might not be initialized below
             exclusiveProcess = null;
 #pragma warning restore CS8625
 
             bool retry;
-            bool weWin = false;
-
+            int retries = 100;
             do {
                 retry = false;
 
                 try {
-                    var lockFileStream = File.Open(LOCK_PATH, FileMode.Create, FileAccess.Write, FileShare.Read);
+                    lockFileStream = File.Open(LOCK_PATH, FileMode.Create, FileAccess.Write, FileShare.Read);
                     exclusiveProcess = Process.GetCurrentProcess();
                     var bytes = Encoding.UTF8.GetBytes(exclusiveProcess.Id.ToString());
                     lockFileStream.Write(bytes, 0, bytes.Length);
-                    lockFileStream.Flush();//todo: worry about a partial write here
-                    weWin = true;
-
+                    lockFileStream.Flush();
                 } catch (Exception ex) {//todo: more specific
 
                     using (var fs = File.Open(LOCK_PATH, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
@@ -157,6 +157,9 @@ namespace SimpleFrame {
                             } catch (ArgumentException) {
                                 //process might have changed
                                 retry = true;
+                                if (--retries <= 0) {
+                                    throw new Exception("Failed to acquire lock file(\"" + LOCK_PATH + "\") and cannot locate the main process holding it.");
+                                }
                             }
                         }
                     }
@@ -165,11 +168,7 @@ namespace SimpleFrame {
 
             } while (retry);
 
-            return weWin;
-        }
-
-        private void OpenFile(string uri) {
-            throw new NotImplementedException();
+            return lockFileStream != null;
         }
 
     }
