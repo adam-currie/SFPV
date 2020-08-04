@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
@@ -8,7 +7,7 @@ namespace SimpleFrame {
 
         public const int WM_COPYDATA = 0x004A;
 
-        [DllImport("user32", EntryPoint = "SendMessageA")]
+        [DllImport("user32", CharSet = CharSet.Auto)]
         private static extern int SendMessage(IntPtr Hwnd, int wMsg, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]
@@ -18,7 +17,7 @@ namespace SimpleFrame {
             public IntPtr lpData;
         }
 
-        public static void SendString(Process targetProcess, string msg) {
+        public static void SendString(IntPtr hwnd, string msg) {
             IntPtr _stringMessageBuffer = Marshal.StringToHGlobalUni(msg);
 
             COPYDATASTRUCT data = new COPYDATASTRUCT();
@@ -29,7 +28,7 @@ namespace SimpleFrame {
             IntPtr buff = Marshal.AllocHGlobal(Marshal.SizeOf(data));
             Marshal.StructureToPtr(data, buff, false);
 
-            SendMessage(targetProcess.MainWindowHandle, WM_COPYDATA, IntPtr.Zero, buff);
+            SendMessage(hwnd, WM_COPYDATA, IntPtr.Zero, buff);
 
             Marshal.FreeHGlobal(buff);
         }

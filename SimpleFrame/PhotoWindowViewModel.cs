@@ -83,7 +83,7 @@ namespace SimpleFrame {
             : this(new PhotoWindowData(), persistent) { }
 
         public PhotoWindowViewModel(string pathToOpen, bool persistent = true)
-            : this(new PhotoWindowData() { ImagePath = pathToOpen }, persistent) { }
+            : this(new PhotoWindowData(pathToOpen), persistent) { }
 
         /// <summary>
         /// Wraps UpdateProperty to also update the db if persistence is enabled.

@@ -1,4 +1,4 @@
-using SimpleFrame.DB;
+﻿using SimpleFrame.DB;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -17,6 +17,8 @@ namespace SimpleFrame {
         private const string ICON_PATH = "icon.ico";
 
         private FileStream? lockFileStream;//need to reference this to keep it locked
+        private HiddenMsgWindow? msgWindow;
+
         private WinForms.NotifyIcon? notifyIcon;//won't be null after initialization
 
         private ConcurrentPhotoWindowCollection photoWindows = new ConcurrentPhotoWindowCollection();
@@ -27,14 +29,30 @@ namespace SimpleFrame {
         protected override void OnStartup(StartupEventArgs e) {
             Process mainProcess;
 
+            msgWindow = new HiddenMsgWindow();
+            msgWindow.WndProcCalled += (s, e) => {
+                //open up files sent to us
+                if (e.Msg == WmCopyDataHelper.WM_COPYDATA) {
+                    string path = WmCopyDataHelper.ReadString(e);
+                    //todo: validate?
+                    OpenPhotoWindowOnNewThread( new PhotoWindowData(path));
+                }
+            };
+
             if (TryLockAsMainProcess(out mainProcess)) {
                 StartAsMainProcess(e.Args);
             } else {
-                if (e.Args != null) {
+                if (e.Args.Length > 0) {
+                    IntPtr targetHwnd = HiddenMsgWindow.FindMsgWindowForProcess(mainProcess);
+                    if (targetHwnd == IntPtr.Zero)
+                        throw new Exception("Failed to open file(s) in main process.");
+
+                    //we aren't the main process so send args over to that
                     for (int i = 0; i < e.Args.Length; i++) {
-                        WmCopyDataHelper.SendString(mainProcess, e.Args[i]);
+                        WmCopyDataHelper.SendString(targetHwnd, e.Args[i]);
                     }
                 }
+
                 Shutdown();
             }
         }
@@ -47,29 +65,28 @@ namespace SimpleFrame {
 
         private void StartAsMainProcess(string[] args) {
             notifyIcon = StartTrayIcon();
-            
-            new SpongeWindow().WndProcCalled += (s, e) => {
-                //open up files sent to us
-                if (e.Msg == WmCopyDataHelper.WM_COPYDATA) {
-                    OpenFile(WmCopyDataHelper.ReadString(e));
-                }
-            };
+
+            bool openedSomething = false;
 
             //open windows from last time
             using (var db = new WindowDbContext()) {
                 foreach (var windowData in db.Windows) {
                     OpenPhotoWindowOnNewThread(windowData);
+                    openedSomething = true;
                 }
             }
 
+            //open images from args
             if (args != null) {
                 for (int i = 0; i < args.Length; i++) {
-                    OpenFile(args[i]);
+                    //todo: validate path
+                    OpenPhotoWindowOnNewThread(new PhotoWindowData(args[i]));
+                    openedSomething = true;
                 }
             }
 
-            //todo: only if ((no windows opened from last time || from args) && started manually by user)
-            {
+            //if nothing else opened and the user started us
+            if (!openedSomething) {//todo: and started by user
                 OpenPhotoWindowOnNewThread();
             }
         }
