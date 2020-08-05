@@ -18,7 +18,9 @@
 
         <!-- IMAGE -->
         <Grid>
-            <Image Name="backgroundImg"/>
+            <Image 
+                Name="backgroundImg"
+                Source="{Binding ImageSource}"/>
         </Grid>
 
         <!-- CONTROLS -->
