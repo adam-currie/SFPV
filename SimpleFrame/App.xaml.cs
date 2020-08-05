@@ -143,6 +143,19 @@ namespace SimpleFrame {
 
             icon.Visible = true;
 
+            icon.Click += (s, e) => {
+                /*
+                 * For some weird there are no public methods on NotifyIcon or ContextMenuStrip
+                 * to show the menu "for the taskbar" with the same behavior as a right click.
+                 * This private method does the job and it's pretty safe to expect it to exist since it's
+                 * been around forever and win forms is already old and not going to change.
+                 * We check for null anyway just in case.
+                 */
+                typeof(WinForms.NotifyIcon)
+                    .GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic)
+                    ?.Invoke(icon, null);
+            };
+
             return icon;
         }
 
