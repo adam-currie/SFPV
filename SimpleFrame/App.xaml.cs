@@ -140,6 +140,7 @@ namespace SimpleFrame {
                                 //process might have changed
                                 retry = true;
                                 if (--retries <= 0) {
+
                                     throw new Exception("Failed to acquire lock file(\"" + LOCK_PATH + "\") and cannot locate the main process holding it.");
                                 }
                             }
