@@ -1,14 +1,11 @@
 ﻿using SimpleFrame.DB;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
-using WinForms = System.Windows.Forms;
 
 namespace SimpleFrame {
 
@@ -19,12 +16,10 @@ namespace SimpleFrame {
         private FileStream? lockFileStream;//need to reference this to keep it locked
         private HiddenMsgWindow? msgWindow;
 
-        private WinForms.NotifyIcon? notifyIcon;//won't be null after initialization
+        ///won't be null after <see cref="StartAsMainProcess">
+        private MainNotifyIcon? notifyIcon;
 
         private ConcurrentPhotoWindowCollection photoWindows = new ConcurrentPhotoWindowCollection();
-        private static Lazy<Icon> notifyIconIcon = new Lazy<Icon>(() =>
-            Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location)
-        );
 
         protected override void OnStartup(StartupEventArgs e) {
             Process mainProcess;
@@ -64,7 +59,9 @@ namespace SimpleFrame {
         }
 
         private void StartAsMainProcess(string[] args) {
-            notifyIcon = StartTrayIcon();
+            notifyIcon = new MainNotifyIcon();
+            notifyIcon.CloseAll += (s,e) => photoWindows.CloseAll(false);
+            notifyIcon.Quit += (s,e) => Shutdown();
 
             bool openedSomething = false;
 
@@ -114,51 +111,6 @@ namespace SimpleFrame {
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
         }
-
-        private WinForms.NotifyIcon StartTrayIcon() {
-            var icon = new WinForms.NotifyIcon();
-
-            icon.BalloonTipText = "todo: balloon tip.";
-            icon.BalloonTipTitle = "Simple Frame";
-            //icon.Text = "Simple Frame";
-            icon.Icon = notifyIconIcon.Value;
-
-            var strip = new WinForms.ContextMenuStrip();
-
-            WinForms.ToolStripItem closeAll = new WinForms.ToolStripMenuItem("Close All");
-            closeAll.Click += (s, e) => {
-                photoWindows.CloseAll(false);
-            };
-            strip.Items.Add(closeAll);
-
-            WinForms.ToolStripItem quit = new WinForms.ToolStripMenuItem("Quit");
-            quit.Click += (s, e) => {
-                Shutdown();
-            };
-            strip.Items.Add(quit);
-
-            strip.Items.Add(new WinForms.ToolStripSeparator());
-
-            icon.ContextMenuStrip = strip;
-
-            icon.Visible = true;
-
-            icon.Click += (s, e) => {
-                /*
-                 * For some weird there are no public methods on NotifyIcon or ContextMenuStrip
-                 * to show the menu "for the taskbar" with the same behavior as a right click.
-                 * This private method does the job and it's pretty safe to expect it to exist since it's
-                 * been around forever and win forms is already old and not going to change.
-                 * We check for null anyway just in case.
-                 */
-                typeof(WinForms.NotifyIcon)
-                    .GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic)
-                    ?.Invoke(icon, null);
-            };
-
-            return icon;
-        }
-
 
         private bool TryLockAsMainProcess(out Process exclusiveProcess) {
 
