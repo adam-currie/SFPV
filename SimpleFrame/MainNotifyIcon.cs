@@ -13,16 +13,16 @@ namespace SimpleFrame {
         public MainNotifyIcon() {
             icon = new NotifyIcon();
 
-            icon.BalloonTipTitle = "SFPV";
+            icon.BalloonTipTitle = Resources.AppName;
             icon.Icon = Icon.ExtractAssociatedIcon(Assembly.GetExecutingAssembly().Location);
 
             var strip = new ContextMenuStrip();
 
-            ToolStripItem closeAll = new ToolStripMenuItem("Close All");
+            ToolStripItem closeAll = new ToolStripMenuItem(Resources.NotifyIcon_CloseAllWindows);
             closeAll.Click += CloseAll;
             strip.Items.Add(closeAll);
 
-            ToolStripItem quit = new ToolStripMenuItem("Quit");
+            ToolStripItem quit = new ToolStripMenuItem(Resources.NotifyIcon_Quit);
             quit.Click += Quit;
             strip.Items.Add(quit);
 

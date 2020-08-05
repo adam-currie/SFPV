@@ -121,9 +121,9 @@ namespace SimpleFrame {
                 ImageSource = null;
                 ExplicitLoadImageErrorMsg = e switch
                 {
-                    UriFormatException _ => "invalid file path",
-                    FileNotFoundException _ => "file not found",
-                    _ => "unknown error",
+                    UriFormatException _    => Resources.PhotoWindow_Error_InvalidFilePath,
+                    FileNotFoundException _ => Resources.PhotoWindow_Error_FileNotFound,
+                    _                       => Resources.PhotoWindow_Error_Unknown,
                     //todo: there's got to be more exceptions wtf, test this out
                 };
             }
