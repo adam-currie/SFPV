@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
+﻿using GalaSoft.MvvmLight.Command;
+using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using SimpleFrame.DB;
 using System;
 using System.ComponentModel;
@@ -6,8 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace SimpleFrame {
     internal class PhotoWindowViewModel : ViewModelBase {
@@ -68,8 +71,10 @@ namespace SimpleFrame {
         private ImageSource? _imageSource;
         public ImageSource? ImageSource {
             get => _imageSource;
-            private set => UpdateProperty(ref _imageSource, value); 
+            private set => UpdateProperty(ref _imageSource, value);
         }
+
+        public PhotoFramePreviewLoader FrameSelectionList { get; }
 
         private string? _explicitImageLoadErrorMsg;
         /// <summary>
@@ -100,7 +105,16 @@ namespace SimpleFrame {
                     db.SaveChanges();
                 }
             }
+
+            //todo: view model base should provide this dispatcher (among other things)
+            FrameSelectionList = new PhotoFramePreviewLoader(Dispatcher.CurrentDispatcher);
+
+            ReloadFrameSelectionCommand = new RelayCommand(
+                () => _ = FrameSelectionList.LoadAsync()
+            );
         }
+
+        public ICommand ReloadFrameSelectionCommand { get; private set; } 
 
         /// <summary>
         /// Loads the next image in the current directory with wrapping.

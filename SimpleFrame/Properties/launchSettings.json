@@ -1,8 +1,7 @@
 {
   "profiles": {
     "SimpleFrame": {
-      "commandName": "Project",
-      "workingDirectory": "$(ProjectDir)\\working directory"
+      "commandName": "Project"
     }
   }
 }

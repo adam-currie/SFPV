@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace SimpleFrame {
 
@@ -27,5 +28,11 @@ namespace SimpleFrame {
             DataContext.Persistence = persistOnClose;
             base.OnClosing(e);
         }
+
+        private void FrameSelection_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
+            if ((bool)e.NewValue == true)
+                _ = DataContext.FrameSelectionList.LoadAsync();
+        }
+
     }
 }

@@ -15,15 +15,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="frames\**" />
-    <EmbeddedResource Remove="frames\**" />
-    <None Remove="frames\**" />
-    <Page Remove="frames\**" />
+    <Compile Remove="working directory\**" />
+    <EmbeddedResource Remove="working directory\**" />
+    <None Remove="working directory\**" />
+    <Page Remove="working directory\**" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="icon.ico" />
     <None Remove="lock" />
+    <None Remove="test.jpg" />
     <None Remove="testframe.pfz" />
     <None Remove="windows.db" />
   </ItemGroup>
@@ -35,6 +36,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MvvmLightLibs" Version="5.4.1.1" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.2.8" />
   </ItemGroup>
 

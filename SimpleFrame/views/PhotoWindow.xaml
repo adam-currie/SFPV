@@ -4,110 +4,129 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimpleFrame"
+        xmlns:cmd="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Platform"
         mc:Ignorable="d"
         Height="450" 
         Width="800"
         AllowsTransparency ="True"
         UseLayoutRounding="True"
         WindowStyle="None"
-        Background="Transparent">
+        Background="Transparent" 
+        ResizeMode="CanResizeWithGrip"><!--debug-->
         <!--ShowInTaskbar="False"-->
 
-    <Grid>
-
-        <!-- IMAGE -->
+    <local:PhotoFrameControl>
         <Grid>
-            <Image 
-                Name="backgroundImg"
-                Source="{Binding ImageSource}"/>
+
+            <!-- IMAGE -->
+            <Grid>
+                <Image 
+                        Name="backgroundImg"
+                        Source="{Binding ImageSource}" Stretch="Uniform"/>
+            </Grid>
+
+            <!-- CONTROLS -->
+            <Grid Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="4*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="5*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Button
+                    Name="prevBtn"
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    Background="Transparent"/>
+                <Button
+                    Name="centerBtn"
+                    Grid.Column="1"
+                    Grid.Row="0"
+                    Grid.ColumnSpan="3"
+                    Background="Transparent"/>
+                <Button
+                    Name="nextBtn"
+                    Grid.Column="5"
+                    Grid.Row="0"
+                    Background="Transparent"/>
+                <Button
+                    Name="zoomOutBtn"
+                    Grid.Column="0"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Background="Transparent"/>
+                <Button
+                    Name="cycleFitBtn"
+                    Grid.Column="2"
+                    Grid.Row="1"
+                    Background="Transparent"/>
+                <Button
+                    Name="zoomInBtn"
+                    Grid.Column="3"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="2"
+                    Background="Transparent"/>
+            </Grid>
+
+            <!-- FRAME SELECTION -->
+            <Grid>
+                <!--<Border>
+                    <Border.Effect>
+                        <BlurEffect Radius="10" KernelType="Gaussian"/>
+                    </Border.Effect>
+                </Border>-->
+
+                <DockPanel 
+                        Background="Black"
+                        Width="360"
+                        MaxHeight="520">
+                    <StackPanel
+                            Orientation="Horizontal"
+                            Height="40"
+                            DockPanel.Dock="Bottom"
+                            VerticalAlignment="Bottom"
+                            FlowDirection ="RightToLeft">
+                        <Button Width="50">
+                            ok
+                        </Button>
+                        <Button Width="50">
+                            cancel
+                        </Button>
+                        <Button Width="50" Command="{Binding ReloadFrameSelectionCommand}">
+                            refresh
+                        </Button>
+                    </StackPanel>
+                    <ListBox
+                            Name="frameSelection"
+                            Height="Auto"
+                            Width="Auto"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Background="Transparent"
+                            ItemsSource="{Binding FrameSelectionList}"
+                            IsVisibleChanged="FrameSelection_IsVisibleChanged">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <!--debug <WrapPanel/>-->
+                                <UniformGrid/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Image Source="{Binding Thumbnail}"></Image>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </Grid>
+
         </Grid>
-
-        <!-- CONTROLS -->
-        <Grid Visibility="Collapsed">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="4*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="4*"/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="5*"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <Button
-            Name="prevBtn"
-            Grid.Column="0"
-            Grid.Row="0"
-            Background="Transparent"/>
-            <Button
-            Name="centerBtn"
-            Grid.Column="1"
-            Grid.Row="0"
-            Grid.ColumnSpan="3"
-            Background="Transparent"/>
-            <Button
-            Name="nextBtn"
-            Grid.Column="5"
-            Grid.Row="0"
-            Background="Transparent"/>
-            <Button
-            Name="zoomOutBtn"
-            Grid.Column="0"
-            Grid.Row="1"
-            Grid.ColumnSpan="2"
-            Background="Transparent"/>
-            <Button
-            Name="cycleFitBtn"
-            Grid.Column="2"
-            Grid.Row="1"
-            Background="Transparent"/>
-            <Button
-            Name="zoomInBtn"
-            Grid.Column="3"
-            Grid.Row="1"
-            Grid.ColumnSpan="2"
-            Background="Transparent"/>
-        </Grid>
-
-        <!-- FRAME SELECTION -->
-        <Grid>
-            <Border>
-                <Border.Effect>
-                    <BlurEffect Radius="10" KernelType="Gaussian"/>
-                </Border.Effect>
-            </Border>
-
-            <DockPanel 
-                Background="Black"
-                Width="360"
-                MaxHeight="520">
-                <StackPanel
-                    Orientation="Horizontal"
-                    Height="40"
-                    DockPanel.Dock="Bottom"
-                    VerticalAlignment="Bottom">
-                </StackPanel>
-                <ListBox
-                    Name="frameSelection"
-                    Height="Auto"
-                    Width="Auto"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    VerticalContentAlignment="Stretch"
-                    Background="Transparent">
-                    <!-- todoItemsSource="{Binding FrameBorderList}" -->
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <!--<WrapPanel/>-->
-                            <UniformGrid/>
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                </ListBox>
-            </DockPanel>
-        </Grid> 
-
-
-    </Grid>
+    </local:PhotoFrameControl>
 </Window>
