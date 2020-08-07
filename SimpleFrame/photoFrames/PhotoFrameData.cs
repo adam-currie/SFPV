@@ -7,16 +7,24 @@ using System.Windows.Media.Imaging;
 namespace SimpleFrame {
     public class PhotoFrameData {
 
-        public ImageSource Top { get; private set; }
-        public ImageSource Bottom { get; private set; }
-        public ImageSource Left { get; private set; }
-        public ImageSource Right { get; private set; }
-        public ImageSource TopLeft { get; private set; }
-        public ImageSource BottomRight { get; private set; }
-        public ImageSource BottomLeft { get; private set; }
-        public ImageSource TopRight { get; private set; }
-        public ImageSource Thumbnail { get; private set; }
-        public string? Path { get; private set; }
+        public ImageSource Top { get; }
+        public ImageSource Bottom { get; }
+        public ImageSource Left { get; }
+        public ImageSource Right { get; }
+        public int TopOffset { get; }
+        public int BottomOffset { get; }
+        public int LeftOffset { get; }
+        public int RightOffset { get; }
+        public bool TopRepeating { get; }
+        public bool BottomRepeating { get; }
+        public bool LeftRepeating { get; }
+        public bool RightRepeating { get; }
+        public ImageSource TopLeft { get; }
+        public ImageSource BottomRight { get; }
+        public ImageSource BottomLeft { get; }
+        public ImageSource TopRight { get; }
+        public ImageSource Thumbnail { get; }
+        public string? Path { get; }
 
         private PhotoFrameData(
             ImageSource top,
@@ -28,7 +36,15 @@ namespace SimpleFrame {
             ImageSource bottomLeft,
             ImageSource topRight,
             ImageSource thumbnail,
-            string? path
+            string? path,
+            int topOffset,
+            int bottomOffset,
+            int leftOffset,
+            int rightOffset,
+            bool topRepeating,
+            bool bottomRepeating,
+            bool leftRepeating,
+            bool rightRepeating
             ) {
             Top = top;
             Bottom = bottom;
@@ -39,7 +55,15 @@ namespace SimpleFrame {
             BottomLeft = bottomLeft;
             BottomRight = bottomRight;
             Thumbnail = thumbnail;
+            TopOffset = topOffset;
+            BottomOffset = bottomOffset;
+            LeftOffset = leftOffset;
+            RightOffset = rightOffset;
             Path = path;
+            BottomRepeating = bottomRepeating;
+            TopRepeating = topRepeating;
+            LeftRepeating = leftRepeating;
+            RightRepeating = rightRepeating;
         }
 
         internal class Builder {
@@ -59,6 +83,15 @@ namespace SimpleFrame {
                 get => _path;
                 set { _path = value; pathSet = true; }
             }
+
+            public int TopOffset { get; set; } = 0;
+            public int LeftOffset { get; set; } = 0;
+            public int RightOffset { get; set; } = 0;
+            public int BottomOffset { get; set; } = 0;
+            public bool TopRepeating { get; set; } = false;
+            public bool BottomRepeating { get; set; } = false;
+            public bool LeftRepeating { get; set; } = false;
+            public bool RightRepeating { get; set; } = false;
 
 
             /// <summary>
@@ -90,7 +123,15 @@ namespace SimpleFrame {
                     bottomLeft: BottomLeft, 
                     bottomRight: BottomRight,
                     thumbnail: Thumbnail,
-                    path: Path
+                    path: Path,
+                    topOffset: TopOffset,
+                    bottomOffset: BottomOffset,
+                    rightOffset: RightOffset,
+                    leftOffset: LeftOffset,
+                    topRepeating: TopRepeating,
+                    bottomRepeating: BottomRepeating,
+                    leftRepeating: LeftRepeating,
+                    rightRepeating: RightRepeating
                 );
             }
 

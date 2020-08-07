@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.Windows.Media.Imaging;
+using System.Xml;
 
 namespace SimpleFrame {
     internal class PhotoFrameReader : IDisposable {
@@ -37,7 +38,44 @@ namespace SimpleFrame {
             builder.Thumbnail = ReadImage("thumbnail.png");
 
             builder.Path = path;
-            //todo: meta
+
+            ZipArchiveEntry metaEntry = archive.GetEntry("meta.xml");
+            using (StreamReader reader = new StreamReader(metaEntry.Open())) {
+                using (Stream s = metaEntry.Open()) {
+                    using (XmlReader xml = XmlReader.Create(s)) {
+                        while (xml.Read()) {
+                            if (xml.NodeType == XmlNodeType.Element && xml.Name == "side") {
+                                switch (xml.GetAttribute("name")){
+                                    case "top": {
+                                        if (int.TryParse(xml.GetAttribute("offset"), out int offset))
+                                            builder.TopOffset = offset;
+                                        builder.TopRepeating = "true".Equals(xml.GetAttribute("repeating"));
+                                        break;
+                                    }
+                                    case "bottom": {
+                                        if (int.TryParse(xml.GetAttribute("offset"), out int offset))
+                                            builder.BottomOffset = offset;
+                                        builder.BottomRepeating = "true".Equals(xml.GetAttribute("repeating"));
+                                        break;
+                                    }
+                                    case "left": {
+                                        if (int.TryParse(xml.GetAttribute("offset"), out int offset))
+                                            builder.LeftOffset = offset;
+                                        builder.LeftRepeating = "true".Equals(xml.GetAttribute("repeating"));
+                                        break;
+                                    }
+                                    case "right": {
+                                        if (int.TryParse(xml.GetAttribute("offset"), out int offset))
+                                            builder.RightOffset = offset;
+                                        builder.RightRepeating = "true".Equals(xml.GetAttribute("repeating"));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             return builder.Build();
         }
