@@ -5,8 +5,10 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -58,7 +60,7 @@ namespace SimpleFrame {
             set => UpdateDbBackedProperty((x) => data.Height = x, data.Height, value);
         }
 
-        private string? Frame {
+        private string? FramePath {
             get => data.Frame;
             set => UpdateDbBackedProperty((x) => data.Frame = x, data.Frame, value);
         }
@@ -76,6 +78,35 @@ namespace SimpleFrame {
 
         public PhotoFramePreviewLoader FrameSelectionList { get; }
 
+        private PhotoFramePreview? _selectedFramePreview;
+        public PhotoFramePreview? SelectedFramePreview {
+            get => _selectedFramePreview;
+            set {
+                if (UpdateProperty(ref _selectedFramePreview, value) && value != null) {
+                    try {
+                        using (var reader = new PhotoFrameReader(value.Path)) {
+                            var nextPhotoFrameData = reader.ReadFrame();
+                            if (PrevPhotoFrameData == null) {
+                                PrevPhotoFrameData = PhotoFrameData;
+                            }
+                            PhotoFrameData = nextPhotoFrameData;
+                        }
+                    } catch {//todo: more specific
+                        //todo: show error message
+                    }
+                }
+            }
+        }
+
+        private PhotoFrameData _photoFrameData;
+        public PhotoFrameData PhotoFrameData {
+            get => _photoFrameData;
+            private set => UpdateProperty(ref _photoFrameData, value);
+        }
+        
+        //when this is not null it stores the previous frame data until the user decides on what they are changing it to
+        private PhotoFrameData? PrevPhotoFrameData { get; set; }
+
         private string? _explicitImageLoadErrorMsg;
         /// <summary>
         /// Error messages are minimalistic and don't include the path string.
@@ -85,13 +116,29 @@ namespace SimpleFrame {
             private set => UpdateProperty(ref _explicitImageLoadErrorMsg, value);
         }
 
+        public ICommand ReloadFrameSelectionCommand { get; private set; }
+        public ICommand CancelFrameCommand { get; private set; }
+        public ICommand AcceptFrameCommand { get; private set; }
+
+        public PhotoWindowViewModel(bool persistent = true)
+            : this(new PhotoWindowData(), persistent) { }
+
+        public PhotoWindowViewModel(string pathToOpen, bool persistent = true)
+            : this(new PhotoWindowData(pathToOpen), persistent) { }
+
         public PhotoWindowViewModel(PhotoWindowData data, bool persistent = true) {
             this.data = data;
 
             if (data.ImagePath != null)
                 _ = ExplicitlyLoadImage(data.ImagePath);
 
-            _persistence = persistent;
+            using (var reader = new PhotoFrameReader(data.Frame)) {
+                _photoFrameData = reader.ReadFrame();//todo: exceptions
+            }
+
+            //todo: run some of this init code in the background
+
+                _persistence = persistent;
             if (_persistence == false) {
                 //todo: maybe need to check existence first?
                 using (var db = new WindowDbContext()) {
@@ -112,9 +159,19 @@ namespace SimpleFrame {
             ReloadFrameSelectionCommand = new RelayCommand(
                 () => _ = FrameSelectionList.LoadAsync()
             );
-        }
 
-        public ICommand ReloadFrameSelectionCommand { get; private set; } 
+            CancelFrameCommand = new RelayCommand(() => {
+                if (PrevPhotoFrameData != null) {
+                    PhotoFrameData = PrevPhotoFrameData;
+                    PrevPhotoFrameData = null;
+                }
+            });
+
+            AcceptFrameCommand = new RelayCommand(() => {
+                PrevPhotoFrameData = null;
+                FramePath = PhotoFrameData.Path;
+            });
+        }
 
         /// <summary>
         /// Loads the next image in the current directory with wrapping.
@@ -158,12 +215,6 @@ namespace SimpleFrame {
                 return bitmap;
             }).ConfigureAwait(false);
         }
-
-        public PhotoWindowViewModel(bool persistent = true)
-            : this(new PhotoWindowData(), persistent) { }
-
-        public PhotoWindowViewModel(string pathToOpen, bool persistent = true)
-            : this(new PhotoWindowData(pathToOpen), persistent) { }
 
         /// <summary>
         /// Wraps UpdateProperty to also update the db if persistence is enabled.

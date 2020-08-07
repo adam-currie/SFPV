@@ -15,7 +15,8 @@
         ResizeMode="CanResizeWithGrip"><!--debug-->
         <!--ShowInTaskbar="False"-->
 
-    <local:PhotoFrameControl>
+    <local:PhotoFrameControl
+        Frame="{Binding PhotoFrameData}">
         <Grid>
 
             <!-- IMAGE -->
@@ -75,7 +76,9 @@
             </Grid>
 
             <!-- FRAME SELECTION -->
-            <Grid>
+            <Grid 
+                x:Name="frameSelection"
+                IsVisibleChanged="FrameSelection_IsVisibleChanged">
                 <!--<Border>
                     <Border.Effect>
                         <BlurEffect Radius="10" KernelType="Gaussian"/>
@@ -92,18 +95,36 @@
                             DockPanel.Dock="Bottom"
                             VerticalAlignment="Bottom"
                             FlowDirection ="RightToLeft">
-                        <Button Width="50">
-                            ok
+                        <Button Width="50" Command="{Binding AcceptFrameCommand}" Content="ok"><!--use resources-->
+                            <Button.Triggers>
+                                <EventTrigger RoutedEvent="Button.Click">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Duration="0" Storyboard.TargetName="frameSelection" Storyboard.TargetProperty="Visibility">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Hidden}"/>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Button.Triggers>
                         </Button>
-                        <Button Width="50">
-                            cancel
+                        <Button Width="50" Command="{Binding CancelFrameCommand}" Content="cancel"><!--use resources-->
+                            <Button.Triggers>
+                                <EventTrigger RoutedEvent="Button.Click">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Duration="0" Storyboard.TargetName="frameSelection" Storyboard.TargetProperty="Visibility">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{x:Static Visibility.Hidden}"/>
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Button.Triggers>
                         </Button>
-                        <Button Width="50" Command="{Binding ReloadFrameSelectionCommand}">
-                            refresh
+                        <Button Width="50" Command="{Binding ReloadFrameSelectionCommand}" Content="refresh">
                         </Button>
                     </StackPanel>
                     <ListBox
-                            Name="frameSelection"
                             Height="Auto"
                             Width="Auto"
                             HorizontalAlignment="Stretch"
@@ -111,16 +132,15 @@
                             VerticalContentAlignment="Stretch"
                             Background="Transparent"
                             ItemsSource="{Binding FrameSelectionList}"
-                            IsVisibleChanged="FrameSelection_IsVisibleChanged">
+                            SelectedItem="{Binding SelectedFramePreview}">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <!--debug <WrapPanel/>-->
-                                <UniformGrid/>
+                                <WrapPanel/>
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Image Source="{Binding Thumbnail}"></Image>
+                                <Image Source="{Binding Thumbnail}" Width="100" Height="100" Stretch="UniformToFill"></Image>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

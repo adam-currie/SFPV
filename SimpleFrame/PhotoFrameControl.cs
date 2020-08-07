@@ -18,5 +18,23 @@ namespace SimpleFrame {
                 typeof(PhotoFrameControl), 
                 new FrameworkPropertyMetadata(typeof(PhotoFrameControl)));
         }
+
+        public static readonly DependencyProperty FrameProperty =
+            DependencyProperty.Register(
+            "Frame", 
+            typeof(PhotoFrameData),
+            typeof(PhotoFrameControl),
+            new FrameworkPropertyMetadata(OnFramePropertyChanged));
+
+        private static void OnFramePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            //debug
+            return;
+        }
+
+        public PhotoFrameData Frame {
+            get { return (PhotoFrameData)GetValue(FrameProperty); }
+            set { SetValue(FrameProperty, value); }
+        }
+
     }
 }

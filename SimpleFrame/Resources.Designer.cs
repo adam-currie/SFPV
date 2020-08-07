@@ -70,6 +70,16 @@ namespace SimpleFrame {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        public static byte[] DefaultPhotoFrame {
+            get {
+                object obj = ResourceManager.GetObject("DefaultPhotoFrame", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close All.
         /// </summary>
         public static string NotifyIcon_CloseAllWindows {

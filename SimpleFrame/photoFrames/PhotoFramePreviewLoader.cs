@@ -25,11 +25,6 @@ namespace SimpleFrame {
             : base(collection) {
             this.collection = collection;
             this.dispatcher = dispatcher;
-
-            //debug
-            this.CollectionChanged += (s, e) => {
-                return;
-            };
         }
 
         /// <summary>
@@ -38,8 +33,7 @@ namespace SimpleFrame {
         public async Task LoadAsync() {
             var cancelSource = new CancellationTokenSource();
             CancellableTask newTask = new CancellableTask(() => {
-                var debug = PhotoFrameFiles.GetFiles();
-                foreach (string path in PhotoFrameFiles.GetFiles()) {
+                foreach (string? path in PhotoFrameFiles.GetFiles()) {
                     cancelSource.Token.ThrowIfCancellationRequested();
 
                     BitmapImage? thumb;

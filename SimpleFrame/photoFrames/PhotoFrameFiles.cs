@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.IO;
+using System.Collections;
 
 namespace SimpleFrame {
     internal static class PhotoFrameFiles {
@@ -11,15 +12,24 @@ namespace SimpleFrame {
         /// <summary>
         /// Gets the paths of all the frame files.
         /// </summary>
-        public static string[] GetFiles() {
+        public static IReadOnlyCollection<string?> GetFiles() {
+            string[] loadedPaths;
+
             try {
-                return Directory.GetFiles(dir, "*.pfz");
+                loadedPaths = Directory.GetFiles(dir, "*.pfz");
             } catch (DirectoryNotFoundException) {
                 //there are lots of exceptions that this can throw and we can't recover from any of them :p
                 Directory.CreateDirectory(dir);
+                //let fail this time
+                loadedPaths = Directory.GetFiles(dir, "*.pfz");
             }
 
-            return Directory.GetFiles(dir, "*.pfz");
+            List<string?> paths = new List<string?>(loadedPaths.Length + 1);
+
+            //represents default frame
+            paths.Add(null);
+            paths.AddRange(loadedPaths);
+            return paths;
         }
     }
 }
