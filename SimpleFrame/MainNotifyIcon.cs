@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
@@ -19,11 +19,11 @@ namespace SimpleFrame {
             var strip = new ContextMenuStrip();
 
             ToolStripItem closeAll = new ToolStripMenuItem(Resources.NotifyIcon_CloseAllWindows);
-            closeAll.Click += CloseAll;
+            closeAll.Click += (s,e) => CloseAll?.Invoke(s, e);
             strip.Items.Add(closeAll);
 
             ToolStripItem quit = new ToolStripMenuItem(Resources.NotifyIcon_Quit);
-            quit.Click += Quit;
+            quit.Click += (s, e) => Quit?.Invoke(s, e);
             strip.Items.Add(quit);
 
             strip.Items.Add(new ToolStripSeparator());
