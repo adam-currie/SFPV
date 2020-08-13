@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -38,8 +38,8 @@ namespace PhotoFrames {
                 propertyChangedCallback: (d,e) 
                     => d.CoerceValue(ContentSizeProperty)));
 
-        public FrameData Frame {
-            get => (FrameData)GetValue(FrameProperty);
+        public FrameData? Frame {
+            get => (FrameData?)GetValue(FrameProperty);
             set => SetValue(FrameProperty, value);
         }
 
@@ -58,7 +58,7 @@ namespace PhotoFrames {
 
             child.Measure(ContentSize);
 
-            return new Size(
+            return Frame == null ? ContentSize : new Size(
                 ContentSize.Width + Frame.LeftMargin + Frame.RightMargin,
                 ContentSize.Height + Frame.TopMargin + Frame.BottomMargin);
         }
@@ -67,10 +67,15 @@ namespace PhotoFrames {
             var child = (UIElement)(GetVisualChild(0));
 
             var contentRect = new Rect();
-            contentRect.X = Frame.LeftMargin;
-            contentRect.Y = Frame.TopMargin;
-            contentRect.Width = arrangeBounds.Width - (Frame.LeftMargin + Frame.RightMargin);
-            contentRect.Height = arrangeBounds.Height - (Frame.TopMargin + Frame.BottomMargin);
+            if (Frame != null) {
+                contentRect.X = Frame.LeftMargin;
+                contentRect.Y = Frame.TopMargin;
+                contentRect.Width = arrangeBounds.Width - (Frame.LeftMargin + Frame.RightMargin);
+                contentRect.Height = arrangeBounds.Height - (Frame.TopMargin + Frame.BottomMargin);
+            } else {
+                contentRect.Width = arrangeBounds.Width;
+                contentRect.Height = arrangeBounds.Height;
+            }
 
             child.Arrange(contentRect);
 
