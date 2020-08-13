@@ -33,6 +33,5 @@ namespace SimpleFrame {
             if ((bool)e.NewValue == true)
                 _ = DataContext.FrameSelectionList.LoadAsync();
         }
-
     }
 }

@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleFrame", "SimpleFrame\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleFrameEditor", "SimpleFrameEditor\SimpleFrameEditor.csproj", "{E6BB4C4A-4BA0-4538-AEC8-65D041791FD6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhotoFrames", "PhotoFrames\PhotoFrames.csproj", "{CBF6DBB7-F230-4EA3-854A-9A6F61C6DB8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{E6BB4C4A-4BA0-4538-AEC8-65D041791FD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6BB4C4A-4BA0-4538-AEC8-65D041791FD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6BB4C4A-4BA0-4538-AEC8-65D041791FD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBF6DBB7-F230-4EA3-854A-9A6F61C6DB8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBF6DBB7-F230-4EA3-854A-9A6F61C6DB8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBF6DBB7-F230-4EA3-854A-9A6F61C6DB8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBF6DBB7-F230-4EA3-854A-9A6F61C6DB8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

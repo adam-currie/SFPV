@@ -4,19 +4,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimpleFrame"
+        xmlns:frames="clr-namespace:PhotoFrames;assembly=PhotoFrames"
         xmlns:cmd="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Platform"
         mc:Ignorable="d"
-        Height="450" 
-        Width="800"
         AllowsTransparency ="True"
         UseLayoutRounding="True"
         WindowStyle="None"
-        Background="Transparent" 
-        ResizeMode="CanResizeWithGrip"><!--debug-->
-        <!--ShowInTaskbar="False"-->
+        Background="Transparent"
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight"
+        ShowInTaskbar="False">
 
-    <local:PhotoFrameControl
-        Frame="{Binding PhotoFrameData}">
+    <frames:FrameControl
+        Frame="{Binding FrameData}"
+        ContentSize="{Binding SizeInsideFrame, Mode = TwoWay}"
+        MinimumContentSize="360, 360">
         <Grid>
 
             <!-- IMAGE -->
@@ -148,5 +150,5 @@
             </Grid>
 
         </Grid>
-    </local:PhotoFrameControl>
+    </frames:FrameControl>
 </Window>

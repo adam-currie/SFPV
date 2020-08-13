@@ -11,17 +11,20 @@ using System.Windows.Documents;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Threading;
+using PhotoFrames;
 
 namespace SimpleFrame {
-    internal class PhotoFramePreviewLoader : ReadOnlyObservableCollection<PhotoFramePreview> {
-        private readonly ObservableCollection<PhotoFramePreview> collection;
+    internal class PhotoPreviewLoader : ReadOnlyObservableCollection<PhotoPreview> {
+        private readonly ObservableCollection<PhotoPreview> collection;
         private volatile CancellableTask? loadTask;
         private readonly Dispatcher dispatcher;
+        private readonly PhotoPreview defaultPreview =
+            new PhotoPreview(DefaultFrame.Value.Thumbnail, DefaultFrame.Value.Path);
 
-        public PhotoFramePreviewLoader(Dispatcher dispatcher) 
-            : this(new ObservableCollection<PhotoFramePreview>(), dispatcher) { }
+        public PhotoPreviewLoader(Dispatcher dispatcher) 
+            : this(new ObservableCollection<PhotoPreview>(), dispatcher) { }
 
-        private PhotoFramePreviewLoader(ObservableCollection<PhotoFramePreview> collection, Dispatcher dispatcher) 
+        private PhotoPreviewLoader(ObservableCollection<PhotoPreview> collection, Dispatcher dispatcher) 
             : base(collection) {
             this.collection = collection;
             this.dispatcher = dispatcher;
@@ -32,12 +35,12 @@ namespace SimpleFrame {
         /// </summary>
         public async Task LoadAsync() {
             var cancelSource = new CancellationTokenSource();
-            CancellableTask newTask = new CancellableTask(() => {
-                foreach (string? path in PhotoFrameFiles.GetFiles()) {
+            CancellableTask newLoadTask = new CancellableTask(() => {
+                foreach (string? path in PhotoFiles.GetPaths()) {
                     cancelSource.Token.ThrowIfCancellationRequested();
 
                     BitmapImage? thumb;
-                    using (PhotoFrameReader reader = new PhotoFrameReader(path)) {
+                    using (FrameReader reader = new FrameReader(path)) {
                         try {
                             thumb = reader.ReadThumbnail();
                         } catch (Exception) {
@@ -45,10 +48,8 @@ namespace SimpleFrame {
                         }
                     }
 
-                    cancelSource.Token.ThrowIfCancellationRequested();
-
                     if (thumb!=null) {
-                        var preview = new PhotoFramePreview(thumb, path);
+                        var preview = new PhotoPreview(thumb, path);
                         dispatcher.Invoke(() => 
                             collection.Add(preview)
                         );
@@ -57,13 +58,14 @@ namespace SimpleFrame {
 
             }, cancelSource);
 
-            var prevTask = Interlocked.Exchange(ref loadTask, newTask);
+            var prevTask = Interlocked.Exchange(ref loadTask, newLoadTask);
             if (prevTask != null) {
                 await prevTask.Cancel();
             }
 
             collection.Clear();
-            newTask.Start();
+            collection.Add(defaultPreview);
+            newLoadTask.Start();
         }
 
     }

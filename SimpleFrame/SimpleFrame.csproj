@@ -22,11 +22,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="default.pfz" />
     <None Remove="icon.ico" />
     <None Remove="lock" />
     <None Remove="test.jpg" />
     <None Remove="testframe.pfz" />
     <None Remove="windows.db" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="default.pfz" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +47,10 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PhotoFrames\PhotoFrames.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,8 +4,8 @@ using System.IO.Compression;
 using System.Windows.Media.Imaging;
 using System.Xml;
 
-namespace SimpleFrame {
-    internal class PhotoFrameReader : IDisposable {
+namespace PhotoFrames {
+    public sealed class FrameReader : IDisposable {
         private readonly ZipArchive archive;
         private readonly string? path;
 
@@ -14,27 +14,26 @@ namespace SimpleFrame {
         /// <summary>
         /// Creates a new FrameReader.
         /// </summary>
-        /// <param name="path">file path, pass null for default frame</param>
-        public PhotoFrameReader(string? path = null) {//todo: exceptions
+        public FrameReader(string path) 
+            : this(new FileStream(path, FileMode.Open), path) { }
+
+        public FrameReader(Stream source, string? path = null) {//todo: exceptions
             this.path = path;
-            Stream source = (path == null) ?
-                (Stream)new MemoryStream(Resources.DefaultPhotoFrame) :
-                new FileStream(path, FileMode.Open);
             archive = new ZipArchive(source, ZipArchiveMode.Read, false);
         }
 
         //todo: exceptions
-        internal PhotoFrameData ReadFrame() {
-            PhotoFrameData.Builder builder = new PhotoFrameData.Builder();
+        public FrameData ReadFrame() {
+            FrameData.Builder builder = new FrameData.Builder();
 
-            builder.Top = ReadImage("top.png");
-            builder.Bottom = ReadImage("bottom.png");
-            builder.Left = ReadImage("left.png");
-            builder.Right = ReadImage("right.png");
-            builder.TopLeft = ReadImage("top-left.png");
-            builder.TopRight = ReadImage("top-right.png");
-            builder.BottomRight = ReadImage("bottom-right.png");
-            builder.BottomLeft = ReadImage("bottom-left.png");
+            builder.Top = new FrameData.Section(ReadImage("top.png"));
+            builder.Bottom = new FrameData.Section(ReadImage("bottom.png"));
+            builder.Left = new FrameData.Section(ReadImage("left.png"));
+            builder.Right = new FrameData.Section(ReadImage("right.png"));
+            builder.TopLeft = new FrameData.Section(ReadImage("top-left.png"));
+            builder.TopRight = new FrameData.Section(ReadImage("top-right.png"));
+            builder.BottomRight = new FrameData.Section(ReadImage("bottom-right.png"));
+            builder.BottomLeft = new FrameData.Section(ReadImage("bottom-left.png"));
             builder.Thumbnail = ReadImage("thumbnail.png");
 
             builder.Path = path;
@@ -44,30 +43,31 @@ namespace SimpleFrame {
                 using (Stream s = metaEntry.Open()) {
                     using (XmlReader xml = XmlReader.Create(s)) {
                         while (xml.Read()) {
+                            //todo: corners
                             if (xml.NodeType == XmlNodeType.Element && xml.Name == "side") {
                                 switch (xml.GetAttribute("name")){
                                     case "top": {
                                         if (int.TryParse(xml.GetAttribute("offset"), out int offset))
-                                            builder.TopOffset = offset;
-                                        builder.TopRepeating = "true".Equals(xml.GetAttribute("repeating"));
+                                            builder.Top.YOffset = offset;
+                                        builder.Top.Repeating = "true".Equals(xml.GetAttribute("repeating"));
                                         break;
                                     }
                                     case "bottom": {
                                         if (int.TryParse(xml.GetAttribute("offset"), out int offset))
-                                            builder.BottomOffset = offset;
-                                        builder.BottomRepeating = "true".Equals(xml.GetAttribute("repeating"));
+                                            builder.Bottom.YOffset = offset;
+                                        builder.Bottom.Repeating = "true".Equals(xml.GetAttribute("repeating"));
                                         break;
                                     }
                                     case "left": {
                                         if (int.TryParse(xml.GetAttribute("offset"), out int offset))
-                                            builder.LeftOffset = offset;
-                                        builder.LeftRepeating = "true".Equals(xml.GetAttribute("repeating"));
+                                            builder.Left.XOffset = offset;
+                                        builder.Left.Repeating = "true".Equals(xml.GetAttribute("repeating"));
                                         break;
                                     }
                                     case "right": {
                                         if (int.TryParse(xml.GetAttribute("offset"), out int offset))
-                                            builder.RightOffset = offset;
-                                        builder.RightRepeating = "true".Equals(xml.GetAttribute("repeating"));
+                                            builder.Right.XOffset = offset;
+                                        builder.Right.Repeating = "true".Equals(xml.GetAttribute("repeating"));
                                         break;
                                     }
                                 }
@@ -81,28 +81,27 @@ namespace SimpleFrame {
         }
 
         //todo: exceptions
-        internal BitmapImage ReadThumbnail()
+        public BitmapImage ReadThumbnail()
             => ReadImage("thumbnail.png");
 
         private BitmapImage ReadImage(string path) {
             ZipArchiveEntry thumbEntry = archive.GetEntry(path);
-            using (StreamReader reader = new StreamReader(thumbEntry.Open())) {
-                using (Stream s = thumbEntry.Open()) {
-                    using (var memStream = new MemoryStream()) {
-                        s.CopyTo(memStream);
-                        var bitmap = new BitmapImage();
-                        bitmap.BeginInit();
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.StreamSource = memStream;
-                        bitmap.EndInit();
-                        bitmap.Freeze();
-                        return bitmap;
-                    }
+            //todo: refactor for performance
+            using (Stream s = thumbEntry.Open()) {
+                using (var memStream = new MemoryStream()) {
+                    s.CopyTo(memStream);
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = memStream;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    return bitmap;
                 }
             }
         }
 
-        protected virtual void Dispose(bool disposing) {
+        private void Dispose(bool disposing) {
             if (!IsDisposed) {
                 if (disposing) {
                     archive.Dispose();

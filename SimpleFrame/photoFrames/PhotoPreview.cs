@@ -2,11 +2,11 @@
 using System.Windows.Media.Imaging;
 
 namespace SimpleFrame {
-    internal class PhotoFramePreview {
-        public BitmapImage Thumbnail { get; }
+    internal class PhotoPreview {
+        public BitmapSource Thumbnail { get; }
         public string? Path { get; }
 
-        public PhotoFramePreview(BitmapImage thumbnail, string? path) {
+        public PhotoPreview(BitmapSource thumbnail, string? path) {
             Thumbnail = thumbnail;
             Path = path;
         }

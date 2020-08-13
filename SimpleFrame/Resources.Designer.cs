@@ -72,9 +72,9 @@ namespace SimpleFrame {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        public static byte[] DefaultPhotoFrame {
+        public static byte[] DefaultFrame {
             get {
-                object obj = ResourceManager.GetObject("DefaultPhotoFrame", resourceCulture);
+                object obj = ResourceManager.GetObject("DefaultFrame", resourceCulture);
                 return ((byte[])(obj));
             }
         }
