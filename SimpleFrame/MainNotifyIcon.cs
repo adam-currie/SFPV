@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
@@ -45,6 +45,10 @@ namespace SimpleFrame {
                     ?.Invoke(icon, null);
             };
         }
+
+        //private void DDebug(object? sender, EventArgs e) {
+        //    CloseAll?.Invoke(sender, e);
+        //}
 
         public void Dispose() {
             icon.Dispose();
