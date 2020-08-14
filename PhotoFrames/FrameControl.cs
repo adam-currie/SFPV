@@ -1,8 +1,10 @@
 using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -10,8 +12,11 @@ namespace PhotoFrames {
 
     //todo: introduce way for user to shrink the frame to fit the size of its content (just set ContentSize to the value returned by GetVisualChild(0).Measure)
     public class FrameControl : ContentControl {
-        //used with ui dimensions, as long as dimensions are less than 2^23 pixels we wont overflow
-        private const int BIG_FACTOR = 2 ^ 8;
+
+        //set in arrange pass
+        private Rect contentRect = new Rect();
+
+        private ResizeOperation? resize = null;
 
         public static readonly DependencyProperty FrameProperty =
             DependencyProperty.Register(
@@ -70,7 +75,6 @@ namespace PhotoFrames {
         protected override Size ArrangeOverride(Size arrangeBounds) {
             var child = (UIElement)(GetVisualChild(0));
 
-            var contentRect = new Rect();
             if (Frame != null) {
                 contentRect.X = Frame.LeftMargin;
                 contentRect.Y = Frame.TopMargin;
@@ -109,11 +113,8 @@ namespace PhotoFrames {
                     DrawCorner(Frame.BottomLeft, buf, 0, pixelHeight - Frame.BottomMargin, bytesPerPixel, bufferStride);
                     DrawCorner(Frame.BottomRight, buf, pixelWidth - Frame.RightMargin, pixelHeight - Frame.BottomMargin, bytesPerPixel, bufferStride);
 
-                    int contentWidth = pixelWidth - (Frame.RightMargin + Frame.LeftMargin);
-                    int contentHeight = pixelHeight - (Frame.TopMargin + Frame.BottomMargin);
-
-                    DrawHorizontalSide(Frame.Top, buf, Frame.LeftMargin, 0, contentWidth, bytesPerPixel, bufferStride);
-                    DrawHorizontalSide(Frame.Bottom, buf, Frame.LeftMargin, pixelHeight - Frame.BottomMargin, contentWidth, bytesPerPixel, bufferStride);
+                    DrawHorizontalSide(Frame.Top, buf, Frame.LeftMargin, 0, (int)contentRect.Width, bytesPerPixel, bufferStride);
+                    DrawHorizontalSide(Frame.Bottom, buf, Frame.LeftMargin, pixelHeight - Frame.BottomMargin, (int)contentRect.Width, bytesPerPixel, bufferStride);
 
                     //todo: vert sizes
 
@@ -124,6 +125,44 @@ namespace PhotoFrames {
                 Marshal.FreeHGlobal(bufHPtr);
             }
         }
+
+        protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e) {
+            Point p = e.GetPosition(this);
+
+            bool above = p.Y < contentRect.Top;
+            bool below = p.Y > contentRect.Bottom;
+            bool left = p.X < contentRect.Left;
+            bool right = p.X > contentRect.Right;
+
+            if (!above && !below && !left && !right)
+                return;
+
+            resize = new ResizeOperation(p, contentRect, above, below, left, right);
+        }
+
+        protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e) {
+            if (resize != null) {
+                resize = null;
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnPreviewMouseMove(MouseEventArgs e) {
+            if (resize != null) {
+                Rect rect = resize.Evaluate(e.GetPosition(this));
+                ContentSize = new Size(rect.Width, rect.Height);
+                //todo: move the window
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnPreviewMouseRightButtonDown(MouseButtonEventArgs e) {
+            if (!contentRect.Contains(e.GetPosition(this))) {
+                //todo: context menu
+                e.Handled = true;
+            }
+        }
+
 
         private static unsafe void DrawHorizontalSide(FrameData.Section s, byte* dest, int destXStart, int destYStart, int writeWidth, int bytesPerPixel, int destStride)
             => DrawPixelsStrechX((byte*)s.Pixels.ToPointer(), dest, destXStart, destYStart, s.Width, s.Height, writeWidth, bytesPerPixel, destStride);
