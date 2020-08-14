@@ -48,8 +48,8 @@ namespace PhotoFrames {
         }
 
         public Size MinimumContentSize {
-            get => (Size)GetValue(ContentSizeProperty);
-            set => SetValue(ContentSizeProperty, value);
+            get => (Size)GetValue(MinimumContentSizeProperty);
+            set => SetValue(MinimumContentSizeProperty, value);
         }
 
         public Size ContentSize {
