@@ -1,4 +1,4 @@
-﻿namespace SimpleFrame.DB {
+namespace SimpleFrame.DB {
     public class PhotoWindowData : IPhotoWindowData {
 
         public int Id { get; set; }

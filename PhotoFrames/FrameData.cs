@@ -1,10 +1,17 @@
 ﻿using System;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace PhotoFrames {
+    //todo: must enforce that pixel format is one channel per byte(regardless if its RGB, RGBA, greyscale, whatever)
     public class FrameData {
         public string? Path { get; }
-
+        internal PixelFormat Format { get; }
+        internal BitmapPalette Palette { get; }
         internal int TopMargin { get; }
         internal int LeftMargin { get; }
         internal int BottomMargin { get; }
@@ -35,6 +42,13 @@ namespace PhotoFrames {
             BottomLeft = bottomLeft;
             BottomRight = bottomRight;
             Thumbnail = thumbnail;
+
+            Format = Top.Image.Format;
+            Palette = Top.Image.Palette;
+            if((from s in new Section[]{TopLeft, Left, BottomLeft, Bottom, BottomRight, Right, TopRight} 
+                select s.Image)
+                .Any(x => Format!=x.Format || Palette!=x.Palette))
+                    throw new FormatException("pixel format of frame images does not match");
 
             int Max(int a, int b, int c) {
                 int n = a;
@@ -72,8 +86,9 @@ namespace PhotoFrames {
         }
 
         internal class Section {
+            private readonly int pixelsSize;
             internal BitmapSource Image { get; }
-            internal byte[] Pixels { get; }
+            internal IntPtr Pixels { get; }
             internal int Width { get; }
             internal int Height { get; }
 
@@ -94,7 +109,19 @@ namespace PhotoFrames {
                 Repeating = repeating;
                 Width = Image.PixelWidth;
                 Height = Image.PixelHeight;
-                Pixels = GetPixels(Image);
+
+                byte[] bytes = GetPixels(Image);
+                pixelsSize = Marshal.SizeOf(bytes[0]) * bytes.Length;
+                Pixels = Marshal.AllocHGlobal(pixelsSize);
+                GC.AddMemoryPressure(pixelsSize);
+                Marshal.Copy(GetPixels(Image), 0, Pixels, bytes.Length);
+            }
+
+            ~Section() {
+                if (Pixels != IntPtr.Zero) {
+                    Marshal.FreeHGlobal(Pixels);
+                    GC.RemoveMemoryPressure(pixelsSize);
+                }
             }
 
             internal static Section CreateCorner(BitmapSource image, int xOffset, int yOffset)

@@ -1,4 +1,4 @@
-﻿using SimpleFrame.DB;
+using SimpleFrame.DB;
 using System;
 using System.Collections.Generic;
 using System.Text;

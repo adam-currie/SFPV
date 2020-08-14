@@ -1,4 +1,4 @@
-﻿namespace SimpleFrame.DB {
+namespace SimpleFrame.DB {
     public interface IPhotoWindowData {
         string? Frame { get; set; }
         double Height { get; set; }
