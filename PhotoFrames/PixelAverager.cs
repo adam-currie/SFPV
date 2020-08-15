@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -12,6 +12,8 @@ namespace PhotoFrames {
         private readonly int bytesPerPixel;
         private readonly int[] byteSums;
         private int sumCount;
+
+        internal int Count => sumCount;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public PixelAverager(int bytesPerPixel){
