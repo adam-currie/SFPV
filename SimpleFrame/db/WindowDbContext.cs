@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace SimpleFrame.DB {
     internal class WindowDbContext : DbContext {
@@ -7,7 +8,9 @@ namespace SimpleFrame.DB {
         public DbSet<PhotoWindowData> Windows { get; set; }
 #pragma warning restore CS8618
 
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
-            => options.UseSqlite("Data Source=windows.db");
+        protected override void OnConfiguring(DbContextOptionsBuilder options) {
+            options.UseSqlite("Data Source=windows.db");
+            options.UseMemoryCache(new MemoryCache(new MemoryCacheOptions()));
+        }
     }
 }
