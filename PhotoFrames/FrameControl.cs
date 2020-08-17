@@ -205,7 +205,7 @@ namespace PhotoFrames {
 
         private static unsafe void DrawPixelsStrechY(byte* src, byte* dest, int destXStart, int destYStart, int srcWidth, int srcHeight, int writeHeight, int bytesPerPixel, int destStride) {
             int srcStride = srcWidth * bytesPerPixel;
-            if (writeHeight > srcWidth) {
+            if (writeHeight > srcHeight) {
                 var extrapolater = new FastExtrapolater(srcHeight, writeHeight);
                 for (int y = 0; y < writeHeight; y++) {
                     extrapolater.Map(y, out int sampleYa, out int sampleYb);
