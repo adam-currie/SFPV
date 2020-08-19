@@ -194,7 +194,7 @@ namespace PhotoFrames {
                         int destX = interp.Map(x);
                         int destIndex = (destX + destXStart) * bytesPerPixel + (y + destYStart) * destStride;
                         if (prevDestIndex != destIndex && averager.Count != 0)
-                            averager.WriteAverage(dest + destIndex);
+                            averager.WriteAverage(dest + prevDestIndex);
                         prevDestIndex = destIndex;
                         averager.Add(src + y * srcStride + x * bytesPerPixel);
                     }
@@ -224,7 +224,7 @@ namespace PhotoFrames {
                     for (int x = 0; x < srcWidth; x++) {
                         int destIndex = (x + destXStart) * bytesPerPixel + (destY + destYStart) * destStride;
                         if (prevDestIndex != destIndex && averager.Count != 0)
-                            averager.WriteAverage(dest + destIndex);
+                            averager.WriteAverage(dest + prevDestIndex);
                         prevDestIndex = destIndex;
                         averager.Add(src + y * srcStride + x * bytesPerPixel);
                     }
