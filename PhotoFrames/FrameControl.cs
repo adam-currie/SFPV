@@ -176,7 +176,7 @@ namespace PhotoFrames {
         private static unsafe void DrawPixelsStrechX(byte* src, byte* dest, int destXStart, int destYStart, int srcWidth, int srcHeight, int writeWidth, int bytesPerPixel, int destStride) {
             int srcStride = srcWidth * bytesPerPixel;
             if (writeWidth > srcWidth) {
-                var extrapolater = new FastExtrapolater(srcWidth, writeWidth);
+                var extrapolater = new FastUpsampler(srcWidth, writeWidth);
                 for (int y = 0; y < srcHeight; y++) {
                     for (int x = 0; x < writeWidth; x++) {
                         extrapolater.Map(x, out int sampleXa, out int sampleXb);
@@ -186,7 +186,7 @@ namespace PhotoFrames {
                                 src[y * srcStride + sampleXb * bytesPerPixel + i]) / 2);
                 }   }   }
             } else {
-                var interp = new FastInterpolater(srcWidth, writeWidth);
+                var interp = new FastDownsampler(srcWidth, writeWidth);
                 int prevDestIndex = 0;
                 for (int y = 0; y < srcHeight; y++) {
                     var averager = new PixelAverager(bytesPerPixel);
@@ -206,7 +206,7 @@ namespace PhotoFrames {
         private static unsafe void DrawPixelsStrechY(byte* src, byte* dest, int destXStart, int destYStart, int srcWidth, int srcHeight, int writeHeight, int bytesPerPixel, int destStride) {
             int srcStride = srcWidth * bytesPerPixel;
             if (writeHeight > srcHeight) {
-                var extrapolater = new FastExtrapolater(srcHeight, writeHeight);
+                var extrapolater = new FastUpsampler(srcHeight, writeHeight);
                 for (int y = 0; y < writeHeight; y++) {
                     extrapolater.Map(y, out int sampleYa, out int sampleYb);
                     for (int x = 0; x < srcWidth; x++) {
@@ -216,7 +216,7 @@ namespace PhotoFrames {
                                 src[sampleYb * srcStride + x * bytesPerPixel + i]) / 2);
                 }   }   }
             } else {
-                var interp = new FastInterpolater(srcHeight, writeHeight);
+                var interp = new FastDownsampler(srcHeight, writeHeight);
                 int prevDestIndex = 0;
                 for (int y = 0; y < srcHeight; y++) {
                     int destY = interp.Map(y);

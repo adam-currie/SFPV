@@ -28,7 +28,7 @@ namespace PhotoFrames {
      *      -----------  =  -----------
      *           b               100b
      */
-    internal struct FastExtrapolater {
+    internal struct FastUpsampler {
         //as long as dimensions are less than 2^23 pixels we wont overflow
         private const int BIG_FACTOR = 2 ^ 8;
 
@@ -36,7 +36,7 @@ namespace PhotoFrames {
         private readonly int denominator;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal FastExtrapolater(int inCount, int outCount) {
+        internal FastUpsampler(int inCount, int outCount) {
             numerator = 2 * (inCount - 2) * BIG_FACTOR + (BIG_FACTOR - 1);
             denominator = (outCount - 2) * BIG_FACTOR;
         }
