@@ -17,6 +17,7 @@ namespace PhotoFrames {
         private Rect contentRect = new Rect();
 
         private ResizeOperation? resize = null;
+        private MouseDevice? resizeDevice;
 
         public static readonly DependencyProperty FrameProperty =
             DependencyProperty.Register(
@@ -102,11 +103,14 @@ namespace PhotoFrames {
                 return;
 
             resize = new ResizeOperation(p, contentRect, above, below, left, right);
+            resizeDevice = e.MouseDevice;
+            resizeDevice.Capture(this);
         }
 
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e) {
             if (resize != null) {
                 resize = null;
+                resizeDevice!.Capture(this, CaptureMode.None);
                 e.Handled = true;
             }
         }
