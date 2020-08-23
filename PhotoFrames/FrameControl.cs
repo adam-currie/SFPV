@@ -99,12 +99,15 @@ namespace PhotoFrames {
             bool left = p.X < contentRect.Left;
             bool right = p.X > contentRect.Right;
 
-            if (!above && !below && !left && !right)
-                return;
-
-            resize = new ResizeOperation(p, contentRect, above, below, left, right);
-            resizeDevice = e.MouseDevice;
-            resizeDevice.Capture(this);
+            if (above || left) {
+                Window.GetWindow(this).DragMove();
+                e.Handled = true;
+            } else if (below || right) {
+                resize = new ResizeOperation(p, contentRect, false, below, false, right);
+                resizeDevice = e.MouseDevice;
+                resizeDevice.Capture(this);
+                e.Handled = true;
+            }
         }
 
         protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e) {
@@ -119,7 +122,6 @@ namespace PhotoFrames {
             if (resize != null) {
                 Rect rect = resize.Evaluate(e.GetPosition(this));
                 ContentSize = new Size(rect.Width, rect.Height);
-                //todo: move the window
                 e.Handled = true;
             }
         }
