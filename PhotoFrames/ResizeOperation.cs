@@ -41,8 +41,8 @@ namespace PhotoFrames {
             Rect rect = originalRect;
             if (fromLeft | fromRight) rect.Width = Math.Max(0, rect.Width + xDiff);
             if (fromTop | fromBottom) rect.Height = Math.Max(0, rect.Height + yDiff);
-            if (fromLeft) rect.X += xDiff;
-            if (fromTop) rect.Y += yDiff;
+            if (fromLeft) rect.X -= xDiff;
+            if (fromTop) rect.Y -= yDiff;
             return rect;
         }
 
