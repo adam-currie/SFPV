@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -18,6 +19,8 @@ namespace PhotoFrames {
 
         private ResizeOperation? resize = null;
         private MouseDevice? resizeDevice;
+
+        private UnmanagedBlock? renderBuf;
 
         public static readonly DependencyProperty FrameProperty =
             DependencyProperty.Register(
@@ -143,32 +146,46 @@ namespace PhotoFrames {
             int bufferStride = pixelWidth * bytesPerPixel;
             int bufferSize = pixelHeight * bufferStride;
 
-            IntPtr bufHPtr = Marshal.AllocHGlobal(bufferStride * pixelHeight);
-            try {
-                unsafe {
-                    byte* buf = (byte*)bufHPtr.ToPointer();
+            EnsureCapacity(ref renderBuf, bufferSize);
+            renderBuf!.Zero();
 
-                    //todo: offsets
-                    //todo: repeating
+            unsafe {
+                byte* buf = (byte*)renderBuf!.ToPointer();
 
-                    DrawCorner(Frame.TopLeft, buf, 0, 0, bytesPerPixel, bufferStride);
-                    DrawCorner(Frame.TopRight, buf, pixelWidth - Frame.RightMargin, 0, bytesPerPixel, bufferStride);
-                    DrawCorner(Frame.BottomLeft, buf, 0, pixelHeight - Frame.BottomMargin, bytesPerPixel, bufferStride);
-                    DrawCorner(Frame.BottomRight, buf, pixelWidth - Frame.RightMargin, pixelHeight - Frame.BottomMargin, bytesPerPixel, bufferStride);
+                //todo: offsets
+                //todo: repeating
 
-                    DrawHorizontalSide(Frame.Top, buf, Frame.LeftMargin, 0, (int)contentRect.Width, bytesPerPixel, bufferStride);
-                    DrawHorizontalSide(Frame.Bottom, buf, Frame.LeftMargin, pixelHeight - Frame.BottomMargin, (int)contentRect.Width, bytesPerPixel, bufferStride);
+                DrawCorner(Frame.TopLeft, buf, 0, 0, bytesPerPixel, bufferStride);
+                DrawCorner(Frame.TopRight, buf, pixelWidth - Frame.RightMargin, 0, bytesPerPixel, bufferStride);
+                DrawCorner(Frame.BottomLeft, buf, 0, pixelHeight - Frame.BottomMargin, bytesPerPixel, bufferStride);
+                DrawCorner(Frame.BottomRight, buf, pixelWidth - Frame.RightMargin, pixelHeight - Frame.BottomMargin, bytesPerPixel, bufferStride);
 
-                    DrawVerticalSide(Frame.Left, buf, 0, Frame.TopMargin, (int)contentRect.Height, bytesPerPixel, bufferStride);
-                    DrawVerticalSide(Frame.Right, buf, pixelWidth - Frame.RightMargin, Frame.TopMargin, (int)contentRect.Height, bytesPerPixel, bufferStride);
+                DrawHorizontalSide(Frame.Top, buf, Frame.LeftMargin, 0, (int)contentRect.Width, bytesPerPixel, bufferStride);
+                DrawHorizontalSide(Frame.Bottom, buf, Frame.LeftMargin, pixelHeight - Frame.BottomMargin, (int)contentRect.Width, bytesPerPixel, bufferStride);
 
-                }
-                var bmp = BitmapSource.Create(pixelWidth, pixelHeight, 96, 96, Frame.Format, Frame.Palette, bufHPtr, bufferSize, bufferStride);
-                dc.DrawImage(bmp, new Rect(RenderSize));
+                DrawVerticalSide(Frame.Left, buf, 0, Frame.TopMargin, (int)contentRect.Height, bytesPerPixel, bufferStride);
+                DrawVerticalSide(Frame.Right, buf, pixelWidth - Frame.RightMargin, Frame.TopMargin, (int)contentRect.Height, bytesPerPixel, bufferStride);
+
+            }
+            var bmp = BitmapSource.Create(pixelWidth, pixelHeight, 96, 96, Frame.Format, Frame.Palette, renderBuf!, bufferSize, bufferStride);
+            dc.DrawImage(bmp, new Rect(RenderSize));
             } finally {
                 Marshal.FreeHGlobal(bufHPtr);
+        }
+
+        private static void EnsureCapacity(ref UnmanagedBlock? renderBuf, int size) {
+            if (renderBuf == null) {
+                renderBuf = new UnmanagedBlock(size);
+            } else {
+                if (renderBuf.ByteCount < size) {
+                    renderBuf.Dispose();
+                    renderBuf = new UnmanagedBlock(RoundUpPow2((uint)size));
+                }
             }
         }
+
+        private static int RoundUpPow2(uint x)
+            => 1 << (sizeof(uint) * 8 - BitOperations.LeadingZeroCount(x - 1));
 
         private static unsafe void DrawHorizontalSide(FrameData.Section s, byte* dest, int destXStart, int destYStart, int writeWidth, int bytesPerPixel, int destStride)
             => DrawPixelsStrechX((byte*)s.Pixels.ToPointer(), dest, destXStart, destYStart, s.Width, s.Height, writeWidth, bytesPerPixel, destStride);
