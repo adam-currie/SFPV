@@ -9,7 +9,7 @@ namespace PhotoFrames {
      *  a = input max index
      *  b = output max index
      *  x = output index
-     *  0 < n < 1 but infinitively close to 1 is ideal
+     *  0 < n < 1 but infinitely close to 1 is ideal
      *      
      *            x(2a + n)
      *       y = ------------
@@ -24,9 +24,9 @@ namespace PhotoFrames {
      *  because n has to be an integer and we don't want it to be 0,
      *  we can simulate a number closer to 1 using a large factor:
      *      
-     *       x(2a + .99)       x(200a + 99)
+     *      x(2a + .99)     x(200a + 99)
      *      -----------  =  -----------
-     *           b               100b
+     *           b             100b
      */
     internal struct FastUpsampler {
         //as long as dimensions are less than 2^23 pixels we wont overflow
