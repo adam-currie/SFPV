@@ -16,7 +16,7 @@ namespace PhotoFrames {
      *                b  
      *      
      *  if y is even you sample input at y/2
-     *  if y is odd you sample input at y/2 and y/2+1 and average them
+     *  if y is odd you sample input at y/2 and y/2 + 1 and average them
      *  
      *  in order to avoid branching the code is going to treat both
      *  cases the same and sample the same pixel twice when y is even
