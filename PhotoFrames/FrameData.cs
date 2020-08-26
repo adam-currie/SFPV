@@ -27,7 +27,7 @@ namespace PhotoFrames {
         internal Section BottomRight { get; }
 
         public BitmapSource Thumbnail { get; }
-
+        public int BytesPerPixel => Top.BytesPerPixel;
         internal FrameData(string? path, 
             Section top, Section bottom, Section left, Section right, 
             Section topLeft, Section topRight, Section bottomLeft, Section bottomRight, 
@@ -85,8 +85,8 @@ namespace PhotoFrames {
             return pixels;
         }
 
-        internal class Section {
-            private readonly int pixelsSize;
+        public class Section {
+            private readonly int bufferSize;
             internal BitmapSource Image { get; }
             internal IntPtr Pixels { get; }
             internal int Width { get; }
@@ -100,6 +100,7 @@ namespace PhotoFrames {
 
             ///<summary> Always false for corners. </summary>
             internal bool Repeating { get; set; }
+            internal int BytesPerPixel { get; }
 
             internal Section(BitmapSource image, int xOffset = 0, int yOffset = 0, bool repeating = false) {
                 if (!image.IsFrozen) throw new ArgumentException("image must be frozen");
@@ -109,18 +110,19 @@ namespace PhotoFrames {
                 Repeating = repeating;
                 Width = Image.PixelWidth;
                 Height = Image.PixelHeight;
+                BytesPerPixel = (Image.Format.BitsPerPixel + 7) / 8;
 
                 byte[] bytes = GetPixels(Image);
-                pixelsSize = Marshal.SizeOf(bytes[0]) * bytes.Length;
-                Pixels = Marshal.AllocHGlobal(pixelsSize);
-                GC.AddMemoryPressure(pixelsSize);
+                bufferSize = Marshal.SizeOf(bytes[0]) * bytes.Length;
+                Pixels = Marshal.AllocHGlobal(bufferSize);
+                GC.AddMemoryPressure(bufferSize);
                 Marshal.Copy(GetPixels(Image), 0, Pixels, bytes.Length);
             }
 
             ~Section() {
                 if (Pixels != IntPtr.Zero) {
                     Marshal.FreeHGlobal(Pixels);
-                    GC.RemoveMemoryPressure(pixelsSize);
+                    GC.RemoveMemoryPressure(bufferSize);
                 }
             }
 

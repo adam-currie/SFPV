@@ -1,8 +1,4 @@
 using System;
-using System.ComponentModel;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,11 +16,11 @@ namespace PhotoFrames {
         private ResizeOperation? resize = null;
         private MouseDevice? resizeDevice;
 
-        private UnmanagedBlock? renderBuf;
+        private UnmanagedBlock renderBuf = new UnmanagedBlock(0);
 
         public static readonly DependencyProperty FrameProperty =
             DependencyProperty.Register(
-            "Frame", 
+            "Frame",
             typeof(FrameData),
             typeof(FrameControl),
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure));
@@ -35,10 +31,10 @@ namespace PhotoFrames {
             typeof(Size),
             typeof(FrameControl),
             new FrameworkPropertyMetadata(
-                new Size(0,0),
+                new Size(0, 0),
                 FrameworkPropertyMetadataOptions.AffectsMeasure,
                 (d, e) => { },
-                coerceValueCallback: (d, value) 
+                coerceValueCallback: (d, value)
                     => Max((Size)value, ((FrameControl)d).MinimumContentSize)));
 
         public static readonly DependencyProperty MinimumContentSizeProperty =
@@ -47,8 +43,8 @@ namespace PhotoFrames {
             typeof(Size),
             typeof(FrameControl),
             new FrameworkPropertyMetadata(
-                new Size(0, 0), 
-                propertyChangedCallback: (d,e) 
+                new Size(0, 0),
+                propertyChangedCallback: (d, e)
                     => d.CoerceValue(ContentSizeProperty)));
 
         public FrameData? Frame {
@@ -67,7 +63,7 @@ namespace PhotoFrames {
         }
 
         protected override Size MeasureOverride(Size constraint) {
-            var child = (UIElement)(GetVisualChild(0));
+            var child = (UIElement)GetVisualChild(0);
 
             child.Measure(ContentSize);
 
@@ -142,127 +138,29 @@ namespace PhotoFrames {
 
             int pixelWidth = (int)RenderSize.Width;
             int pixelHeight = (int)RenderSize.Height;
-            int bytesPerPixel = (Frame.Format.BitsPerPixel + 7) / 8;
-            int bufferStride = pixelWidth * bytesPerPixel;
+            int bufferStride = pixelWidth * Frame.BytesPerPixel;
             int bufferSize = pixelHeight * bufferStride;
 
-            EnsureCapacity(ref renderBuf, bufferSize);
-            renderBuf!.Zero();
+            renderBuf.Zero();
+            renderBuf.EnsureCapacity(bufferSize, true);
 
             unsafe {
-                byte* buf = (byte*)renderBuf!.ToPointer();
+                byte* buf = (byte*)renderBuf.ToPointer();
 
-                //todo: offsets
-                //todo: repeating
+                FrameRendering.DrawCorner(Frame.TopLeft, buf, 0, 0, bufferStride);
+                FrameRendering.DrawCorner(Frame.TopRight, buf, pixelWidth - Frame.RightMargin, 0, bufferStride);
+                FrameRendering.DrawCorner(Frame.BottomLeft, buf, 0, pixelHeight - Frame.BottomMargin, bufferStride);
+                FrameRendering.DrawCorner(Frame.BottomRight, buf, pixelWidth - Frame.RightMargin, pixelHeight - Frame.BottomMargin, bufferStride);
 
-                DrawCorner(Frame.TopLeft, buf, 0, 0, bytesPerPixel, bufferStride);
-                DrawCorner(Frame.TopRight, buf, pixelWidth - Frame.RightMargin, 0, bytesPerPixel, bufferStride);
-                DrawCorner(Frame.BottomLeft, buf, 0, pixelHeight - Frame.BottomMargin, bytesPerPixel, bufferStride);
-                DrawCorner(Frame.BottomRight, buf, pixelWidth - Frame.RightMargin, pixelHeight - Frame.BottomMargin, bytesPerPixel, bufferStride);
+                FrameRendering.DrawHorizontalSide(Frame.Top, buf, Frame.LeftMargin, 0, (int)contentRect.Width, bufferStride);
+                FrameRendering.DrawHorizontalSide(Frame.Bottom, buf, Frame.LeftMargin, pixelHeight - Frame.BottomMargin, (int)contentRect.Width, bufferStride);
 
-                DrawHorizontalSide(Frame.Top, buf, Frame.LeftMargin, 0, (int)contentRect.Width, bytesPerPixel, bufferStride);
-                DrawHorizontalSide(Frame.Bottom, buf, Frame.LeftMargin, pixelHeight - Frame.BottomMargin, (int)contentRect.Width, bytesPerPixel, bufferStride);
-
-                DrawVerticalSide(Frame.Left, buf, 0, Frame.TopMargin, (int)contentRect.Height, bytesPerPixel, bufferStride);
-                DrawVerticalSide(Frame.Right, buf, pixelWidth - Frame.RightMargin, Frame.TopMargin, (int)contentRect.Height, bytesPerPixel, bufferStride);
-
+                FrameRendering.DrawVerticalSide(Frame.Left, buf, 0, Frame.TopMargin, (int)contentRect.Height, bufferStride);
+                FrameRendering.DrawVerticalSide(Frame.Right, buf, pixelWidth - Frame.RightMargin, Frame.TopMargin, (int)contentRect.Height, bufferStride);
             }
-            var bmp = BitmapSource.Create(pixelWidth, pixelHeight, 96, 96, Frame.Format, Frame.Palette, renderBuf!, bufferSize, bufferStride);
+
+            var bmp = BitmapSource.Create(pixelWidth, pixelHeight, 96, 96, Frame.Format, Frame.Palette, renderBuf, bufferSize, bufferStride);
             dc.DrawImage(bmp, new Rect(RenderSize));
-            } finally {
-                Marshal.FreeHGlobal(bufHPtr);
-        }
-
-        private static void EnsureCapacity(ref UnmanagedBlock? renderBuf, int size) {
-            if (renderBuf == null) {
-                renderBuf = new UnmanagedBlock(size);
-            } else {
-                if (renderBuf.ByteCount < size) {
-                    renderBuf.Dispose();
-                    renderBuf = new UnmanagedBlock(RoundUpPow2((uint)size));
-                }
-            }
-        }
-
-        private static int RoundUpPow2(uint x)
-            => 1 << (sizeof(uint) * 8 - BitOperations.LeadingZeroCount(x - 1));
-
-        private static unsafe void DrawHorizontalSide(FrameData.Section s, byte* dest, int destXStart, int destYStart, int writeWidth, int bytesPerPixel, int destStride)
-            => DrawPixelsStrechX((byte*)s.Pixels.ToPointer(), dest, destXStart, destYStart, s.Width, s.Height, writeWidth, bytesPerPixel, destStride);
-
-        private static unsafe void DrawVerticalSide(FrameData.Section s, byte* dest, int destXStart, int destYStart, int writeHeight, int bytesPerPixel, int destStride)
-            => DrawPixelsStrechY((byte*)s.Pixels.ToPointer(), dest, destXStart, destYStart, s.Width, s.Height, writeHeight, bytesPerPixel, destStride);
-
-        private static unsafe void DrawCorner(FrameData.Section s, byte* dest, int destX, int destY, int bytesPerPixel, int destStride)
-            => DrawPixels((byte*)s.Pixels.ToPointer(), dest, destX, destY, s.Width, s.Height, bytesPerPixel, destStride);
-
-        private static unsafe void DrawPixelsStrechX(byte* src, byte* dest, int destXStart, int destYStart, int srcWidth, int srcHeight, int writeWidth, int bytesPerPixel, int destStride) {
-            int srcStride = srcWidth * bytesPerPixel;
-            if (writeWidth > srcWidth) {
-                var extrapolater = new FastUpsampler(srcWidth, writeWidth);
-                for (int y = 0; y < srcHeight; y++) {
-                    for (int x = 0; x < writeWidth; x++) {
-                        extrapolater.Map(x, out int sampleXa, out int sampleXb);
-                        for (int i = 0; i < bytesPerPixel; i++) {
-                            dest[(y + destYStart) * destStride + (x + destXStart) * bytesPerPixel + i] = (byte)((
-                                src[y * srcStride + sampleXa * bytesPerPixel + i] +
-                                src[y * srcStride + sampleXb * bytesPerPixel + i]) / 2);
-                }   }   }
-            } else {
-                var interp = new FastDownsampler(srcWidth, writeWidth);
-                int prevDestIndex = 0;
-                for (int y = 0; y < srcHeight; y++) {
-                    var averager = new PixelAverager(bytesPerPixel);
-                    for (int x = 0; x < srcWidth; x++) {
-                        int destX = interp.Map(x);
-                        int destIndex = (destX + destXStart) * bytesPerPixel + (y + destYStart) * destStride;
-                        if (prevDestIndex != destIndex && averager.Count != 0)
-                            averager.WriteAverage(dest + prevDestIndex);
-                        prevDestIndex = destIndex;
-                        averager.Add(src + y * srcStride + x * bytesPerPixel);
-                    }
-                    averager.WriteAverage(dest + prevDestIndex);
-                }
-            }
-        }
-
-        private static unsafe void DrawPixelsStrechY(byte* src, byte* dest, int destXStart, int destYStart, int srcWidth, int srcHeight, int writeHeight, int bytesPerPixel, int destStride) {
-            int srcStride = srcWidth * bytesPerPixel;
-            if (writeHeight > srcHeight) {
-                var extrapolater = new FastUpsampler(srcHeight, writeHeight);
-                for (int y = 0; y < writeHeight; y++) {
-                    extrapolater.Map(y, out int sampleYa, out int sampleYb);
-                    for (int x = 0; x < srcWidth; x++) {
-                        for (int i = 0; i < bytesPerPixel; i++) {
-                            dest[(y + destYStart) * destStride + (x + destXStart) * bytesPerPixel + i] = (byte)((
-                                src[sampleYa * srcStride + x * bytesPerPixel + i] +
-                                src[sampleYb * srcStride + x * bytesPerPixel + i]) / 2);
-                }   }   }
-            } else {
-                var interp = new FastDownsampler(srcHeight, writeHeight);
-                int prevDestIndex = 0;
-                for (int y = 0; y < srcHeight; y++) {
-                    int destY = interp.Map(y);
-                    var averager = new PixelAverager(bytesPerPixel);
-                    for (int x = 0; x < srcWidth; x++) {
-                        int destIndex = (x + destXStart) * bytesPerPixel + (destY + destYStart) * destStride;
-                        if (prevDestIndex != destIndex && averager.Count != 0)
-                            averager.WriteAverage(dest + prevDestIndex);
-                        prevDestIndex = destIndex;
-                        averager.Add(src + y * srcStride + x * bytesPerPixel);
-                    }
-                    averager.WriteAverage(dest + prevDestIndex);
-                }
-            }
-        }
-
-        private static unsafe void DrawPixels(byte* src, byte* dest, int destX, int destY, int srcWidth, int srcHeight, int bytesPerPixel, int destStride) {
-            int srcStride = srcWidth * bytesPerPixel;
-            for (int y = 0; y < srcHeight; y++)
-                for (int x = 0; x < srcWidth; x++)
-                    for (int i = 0; i < bytesPerPixel; i++)
-                        dest[(y+destY)*destStride + (x+destX)*bytesPerPixel + i] 
-                            = src[y*srcStride + x*bytesPerPixel + i];
         }
 
         private static Size Max(Size a, Size b)
