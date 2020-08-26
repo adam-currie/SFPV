@@ -4,12 +4,12 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace PhotoFrames {
-    internal struct FastDownsampler {
+    internal struct SimpleResampler {
         private readonly int numerator;
         private readonly int denominator;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal FastDownsampler(int inCount, int outCount) {
+        internal SimpleResampler(int inCount, int outCount) {
             numerator = outCount - 1;
             denominator = inCount - 1;
         }
